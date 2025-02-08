@@ -128,14 +128,31 @@ st.title("Neulontaohje kuvasta")
 
 # Then modify your file uploader like this:
 uploaded_file = st.file_uploader(
-    "Valitse kuva...",
+    "Valitse kuva omista kuvistasi...",
     type="jpg",
-    help="Raahaa ja pudota kuva tähän tai valitse tiedosto"  # Optional tooltip in Finnish
+    help="Raahaa ja pudota kuva tähän tai valitse tiedosto",
+    key="uploaded_file"
 )
 
-url = st.text_input("Tai anna JPG-kuvan URL")
+def set_example_text():
+    st.session_state.url = "https://i.media.fi/incoming/2013/09/11/sininen.jpg/alternates/FREE_960/sininen.jpg"
 
-if (uploaded_file is not None) or (url != ''):
+# Initialize session state for the text input if it doesn't already exist
+if 'url' not in st.session_state:
+    st.session_state['url'] = ""
+
+# Text input with a placeholder and key for session state management
+url = st.text_input(
+    "...Tai anna kuvan URL",
+    placeholder="Google haussa kannattaa käyttää 'filetype:jpg', esim 'lahden sininen logo filetype:jpg'",
+    key="url"
+)
+
+# Display example text with a button
+st.button("...Tai käytä alla olevaa esimerkkiä painamalla tästä", on_click=set_example_text)
+st.write("https://i.media.fi/incoming/2013/09/11/sininen.jpg/alternates/FREE_960/sininen.jpg")
+
+if st.session_state.uploaded_file or st.session_state.url:
 
     if not uploaded_file:
         response = requests.get(url)
@@ -170,9 +187,10 @@ if (uploaded_file is not None) or (url != ''):
     line_spacing = block_size - 2
 
     # Check if any parameters have changed
+    current_file = uploaded_file.getvalue() if hasattr(uploaded_file, 'getvalue') else None
     params_changed = (
             (st.session_state.params != current_params) or
-            (st.session_state.uploaded_file != uploaded_file.getvalue())
+            (st.session_state.uploaded_file != current_file)
     )
 
     # Store current parameters
@@ -188,7 +206,10 @@ if (uploaded_file is not None) or (url != ''):
         st.session_state.base_image = padded_image
         st.session_state.used_colors = used_colors.tolist()
         st.session_state.labels = labels
-        st.session_state.uploaded_file = uploaded_file.getvalue()
+        try:
+            st.session_state.uploaded_file = uploaded_file.getvalue()
+        except:
+            pass
 
         st.session_state.used_colors = used_colors.tolist()  # Store as list for easier modification
         st.session_state.color_updated = True
