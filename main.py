@@ -129,7 +129,7 @@ st.title("Neulontaohje kuvasta")
 # Then modify your file uploader like this:
 uploaded_file = st.file_uploader(
     "Valitse kuva omista kuvistasi...",
-    type="jpg",
+    type=["jpg", "png", "jpeg", "bmp", "gif"],
     help="Raahaa ja pudota kuva tähän tai valitse tiedosto",
     key="uploaded_file"
 )
@@ -144,7 +144,7 @@ if 'url' not in st.session_state:
 # Text input with a placeholder and key for session state management
 url = st.text_input(
     "...Tai anna kuvan URL",
-    placeholder="Google haussa kannattaa käyttää 'filetype:jpg', esim 'lahden sininen logo filetype:jpg'",
+    placeholder="",
     key="url"
 )
 
@@ -160,6 +160,14 @@ if st.session_state.uploaded_file or st.session_state.url:
 
     image = Image.open(uploaded_file)
     image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
+    # Apply bilateral filter with increased parameters to reduce noise while preserving edges
+    filtered_image = cv2.bilateralFilter(image, d=15, sigmaColor=150, sigmaSpace=150)
+
+    # Apply Gaussian blur with a larger kernel size
+    image = cv2.GaussianBlur(filtered_image, (15, 15), 0)
+
+    st.image(image)
 
     # Input parameters
     height_cm = st.number_input("Haluttu korkeus (cm):", min_value=1, max_value=100, value=50)
